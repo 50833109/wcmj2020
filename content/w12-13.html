@@ -154,9 +154,77 @@ img.add_border {
           </div>
           
         </header>
-    <div id="tipue_search_content">現場直播的 audio 錄音設定 << <a href='現場直播的 audio 錄音設定.html'>Previous</a> <a href='w8-9.html'>Next</a> >> w8-9<br /><h1>利用 git 指令建立 cmsimde 網站</h1>
-<p><iframe allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="allowfullscreen" data-mce-fragment="1" frameborder="0" height="315" src="https://www.youtube.com/embed/NJTQulLMXnU" width="560"></iframe></p>
-<br />現場直播的 audio 錄音設定 << <a href='現場直播的 audio 錄音設定.html'>Previous</a> <a href='w8-9.html'>Next</a> >> w8-9</div>
+    <div id="tipue_search_content">w10 << <a href='w10.html'>Previous</a> <br /><h1>w12-13</h1>
+<h4>基本概念:</h4>
+<h4>1. 這裡所指的 Blogger API 為:<span> </span><a href="https://developers.google.com/blogger/docs/3.0/using">https://developers.google.com/blogger/docs/3.0/using</a></h4>
+<h4>2. 將 CMSiMDE 中的 Pelican Blog 內容同步到 Google Blogger 的目的, 在讓網際內容管理系統中的網誌原始資料修改過程具備版次, 而且可同時將網誌出版在 Github Pages 與 Google Blogger 中, 讓網際內容的保存較具有永續性.</h4>
+<h4>3. Google Blogger 中的網誌系統各有獨立 ID, 這裡稱為 blog_id, 而網誌中的每一篇文章各有獨立 ID, 這裡稱為 post_id.</h4>
+<h4>4. Google Blogger 管理者登入後, 在 Settings - Permissions 項下, 允許 invite more authors, 而且在 Settings - Permissions - Blog admins and Authors 項下, 允許將所邀請共同寫作的 Author 提升為 Admin 管理者.</h4>
+<h4>5. Google 的每一個 API 都允許使用者建立以 Oauth2 為基礎的登入使用授權憑證, 配合所啟動的各種 API 程式庫, 一旦啟用並登入後, 可以透過程式方法, 呼叫程式庫功能, 對各種 Google 所提供的服務 (Blogger, Drive, Gmail, Calendar 等) 新增內容. 以 Blogger 而言, 只要使用者被設為某一網誌的共同作者, 即擁有在該網誌新增或編輯自己所發布的網誌文章權限.</h4>
+<h4>6. 使用者登入 Google 帳號後, 在<span> </span><a href="https://console.developers.google.com/">https://console.developers.google.com</a><span> </span>中所建立的 Oauth2 client ID, 可以下載存為 client_secrets.json 檔案.</h4>
+<h4>7. client_secrets.json 檔案則可以透過下列程式, 轉換為 credential_token.dat, 使用者針對特定啟用的 API 程式庫, 可以在讀取 credential_token.dat 的情況下, 取得與登入 Gmail 帳號相同的使用授權, 直接在擁有權限的 blog_id 中新增特定的文章 (並以特定的 post_id 辨識).</h4>
+<div class="line number1 index0 alt2"><code class="py decorator"></code></div>
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+<div class="line number5 index4 alt2">5</div>
+<div class="line number6 index5 alt1">6</div>
+<div class="line number7 index6 alt2">7</div>
+<div class="line number8 index7 alt1">8</div>
+<div class="line number9 index8 alt2">9</div>
+<div class="line number10 index9 alt1">10</div>
+<div class="line number11 index10 alt2">11</div>
+<div class="line number12 index11 alt1">12</div>
+<div class="line number13 index12 alt2">13</div>
+<div class="line number14 index13 alt1">14</div>
+<div class="line number15 index14 alt2">15</div>
+<div class="line number16 index15 alt1">16</div>
+<div class="line number17 index16 alt2">17</div>
+<div class="line number18 index17 alt1">18</div>
+<div class="line number19 index18 alt2">19</div>
+<div class="line number20 index19 alt1">20</div>
+<div class="line number21 index20 alt2">21</div>
+<div class="line number22 index21 alt1">22</div>
+<div class="line number23 index22 alt2">23</div>
+<div class="line number24 index23 alt1">24</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="py decorator">@language</code> <code class="py plain">python</code></div>
+<div class="line number2 index1 alt1"><code class="py comments"># https://developers.google.com/blogger/docs/3.0/using</code></div>
+<div class="line number3 index2 alt2"><code class="py comments"># under Mac command + b to execute</code></div>
+<div class="line number4 index3 alt1"><code class="py keyword">import</code> <code class="py plain">pickle</code></div>
+<div class="line number5 index4 alt2"><code class="py keyword">import</code> <code class="py plain">os</code></div>
+<div class="line number6 index5 alt1"><code class="py keyword">from</code> <code class="py plain">googleapiclient.discovery </code><code class="py keyword">import</code> <code class="py plain">build</code></div>
+<div class="line number7 index6 alt2"><code class="py keyword">from</code> <code class="py plain">google_auth_oauthlib.flow </code><code class="py keyword">import</code> <code class="py plain">InstalledAppFlow</code></div>
+<div class="line number8 index7 alt1"> </div>
+<div class="line number9 index8 alt2"> </div>
+<div class="line number10 index9 alt1"><code class="py plain">SCOPES </code><code class="py keyword">=</code> <code class="py plain">[</code><code class="py string">'https://www.googleapis.com/auth/blogger'</code><code class="py plain">, ]</code></div>
+<div class="line number11 index10 alt2"> </div>
+<div class="line number12 index11 alt1"><code class="py comments"># we check if the file tBo store the credentials exists</code></div>
+<div class="line number13 index12 alt2"><code class="py keyword">if</code> <code class="py keyword">not</code> <code class="py plain">os.path.exists(</code><code class="py string">'./../../yen_gm_blogger_token.dat'</code><code class="py plain">):</code></div>
+<div class="line number14 index13 alt1"> </div>
+<div class="line number15 index14 alt2"><code class="py spaces">    </code><code class="py plain">flow </code><code class="py keyword">=</code> <code class="py plain">InstalledAppFlow.from_client_secrets_file(</code><code class="py string">'./../../yen_gm_blogger_secrets.json'</code><code class="py plain">, SCOPES)</code></div>
+<div class="line number16 index15 alt1"><code class="py spaces">    </code><code class="py plain">credentials </code><code class="py keyword">=</code> <code class="py plain">flow.run_local_server()</code></div>
+<div class="line number17 index16 alt2"> </div>
+<div class="line number18 index17 alt1"><code class="py spaces">    </code><code class="py plain">with </code><code class="py functions">open</code><code class="py plain">(</code><code class="py string">'./../../yen_gm_blogger_token.dat'</code><code class="py plain">, </code><code class="py string">'wb'</code><code class="py plain">) as credentials_dat:</code></div>
+<div class="line number19 index18 alt2"><code class="py spaces">        </code><code class="py plain">pickle.dump(credentials, credentials_dat)</code></div>
+<div class="line number20 index19 alt1"><code class="py keyword">else</code><code class="py plain">:</code></div>
+<div class="line number21 index20 alt2"><code class="py spaces">    </code><code class="py plain">with </code><code class="py functions">open</code><code class="py plain">(</code><code class="py string">'./../../yen_gm_blogger_token.dat'</code><code class="py plain">, </code><code class="py string">'rb'</code><code class="py plain">) as credentials_dat:</code></div>
+<div class="line number22 index21 alt1"><code class="py spaces">        </code><code class="py plain">credentials </code><code class="py keyword">=</code> <code class="py plain">pickle.load(credentials_dat)</code></div>
+<div class="line number23 index22 alt2"><code class="py plain">service </code><code class="py keyword">=</code> <code class="py plain">build(</code><code class="py string">'blogger'</code><code class="py plain">, </code><code class="py string">'v3'</code><code class="py plain">, credentials</code><code class="py keyword">=</code><code class="py plain">credentials)</code></div>
+<div class="line number24 index23 alt1"><code class="py plain">g.es(service)</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<p><span></span></p><br />w10 << <a href='w10.html'>Previous</a> </div>
         
     <!-- footer -->
       <div class="container">
