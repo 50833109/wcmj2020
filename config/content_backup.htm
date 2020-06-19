@@ -83,5 +83,236 @@
 <h1>w10</h1>
 <h5><span>ssh===secure share<br/>putty 權限軟體<br/>prtvate key<br/>public key<br/>ssh-keygen -t rsa -b 4096 -C "50833109"<br/>pwd=== print working directory<br/><br/><br/></span></h5>
 <p><a href="https://drive.google.com/file/d/1mqtHKdD2EDJjUvfs76T1-Cs0OwXVJtvO/view?usp=sharing"></a></p>
-<h1>w11</h1>
+<h1>w12-13</h1>
+<h4>基本概念:</h4>
+<h4>1. 這裡所指的 Blogger API 為:<span> </span><a href="https://developers.google.com/blogger/docs/3.0/using">https://developers.google.com/blogger/docs/3.0/using</a></h4>
+<h4>2. 將 CMSiMDE 中的 Pelican Blog 內容同步到 Google Blogger 的目的, 在讓網際內容管理系統中的網誌原始資料修改過程具備版次, 而且可同時將網誌出版在 Github Pages 與 Google Blogger 中, 讓網際內容的保存較具有永續性.</h4>
+<h4>3. Google Blogger 中的網誌系統各有獨立 ID, 這裡稱為 blog_id, 而網誌中的每一篇文章各有獨立 ID, 這裡稱為 post_id.</h4>
+<h4>4. Google Blogger 管理者登入後, 在 Settings - Permissions 項下, 允許 invite more authors, 而且在 Settings - Permissions - Blog admins and Authors 項下, 允許將所邀請共同寫作的 Author 提升為 Admin 管理者.</h4>
+<h4>5. Google 的每一個 API 都允許使用者建立以 Oauth2 為基礎的登入使用授權憑證, 配合所啟動的各種 API 程式庫, 一旦啟用並登入後, 可以透過程式方法, 呼叫程式庫功能, 對各種 Google 所提供的服務 (Blogger, Drive, Gmail, Calendar 等) 新增內容. 以 Blogger 而言, 只要使用者被設為某一網誌的共同作者, 即擁有在該網誌新增或編輯自己所發布的網誌文章權限.</h4>
+<h4>6. 使用者登入 Google 帳號後, 在<span> </span><a href="https://console.developers.google.com/">https://console.developers.google.com</a><span> </span>中所建立的 Oauth2 client ID, 可以下載存為 client_secrets.json 檔案.</h4>
+<h4>7. client_secrets.json 檔案則可以透過下列程式, 轉換為 credential_token.dat, 使用者針對特定啟用的 API 程式庫, 可以在讀取 credential_token.dat 的情況下, 取得與登入 Gmail 帳號相同的使用授權, 直接在擁有權限的 blog_id 中新增特定的文章 (並以特定的 post_id 辨識).</h4>
+<div class="line number1 index0 alt2"><code class="py decorator"></code></div>
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+<div class="line number5 index4 alt2">5</div>
+<div class="line number6 index5 alt1">6</div>
+<div class="line number7 index6 alt2">7</div>
+<div class="line number8 index7 alt1">8</div>
+<div class="line number9 index8 alt2">9</div>
+<div class="line number10 index9 alt1">10</div>
+<div class="line number11 index10 alt2">11</div>
+<div class="line number12 index11 alt1">12</div>
+<div class="line number13 index12 alt2">13</div>
+<div class="line number14 index13 alt1">14</div>
+<div class="line number15 index14 alt2">15</div>
+<div class="line number16 index15 alt1">16</div>
+<div class="line number17 index16 alt2">17</div>
+<div class="line number18 index17 alt1">18</div>
+<div class="line number19 index18 alt2">19</div>
+<div class="line number20 index19 alt1">20</div>
+<div class="line number21 index20 alt2">21</div>
+<div class="line number22 index21 alt1">22</div>
+<div class="line number23 index22 alt2">23</div>
+<div class="line number24 index23 alt1">24</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="py decorator">@language</code> <code class="py plain">python</code></div>
+<div class="line number2 index1 alt1"><code class="py comments"># https://developers.google.com/blogger/docs/3.0/using</code></div>
+<div class="line number3 index2 alt2"><code class="py comments"># under Mac command + b to execute</code></div>
+<div class="line number4 index3 alt1"><code class="py keyword">import</code> <code class="py plain">pickle</code></div>
+<div class="line number5 index4 alt2"><code class="py keyword">import</code> <code class="py plain">os</code></div>
+<div class="line number6 index5 alt1"><code class="py keyword">from</code> <code class="py plain">googleapiclient.discovery </code><code class="py keyword">import</code> <code class="py plain">build</code></div>
+<div class="line number7 index6 alt2"><code class="py keyword">from</code> <code class="py plain">google_auth_oauthlib.flow </code><code class="py keyword">import</code> <code class="py plain">InstalledAppFlow</code></div>
+<div class="line number8 index7 alt1"> </div>
+<div class="line number9 index8 alt2"> </div>
+<div class="line number10 index9 alt1"><code class="py plain">SCOPES </code><code class="py keyword">=</code> <code class="py plain">[</code><code class="py string">'https://www.googleapis.com/auth/blogger'</code><code class="py plain">, ]</code></div>
+<div class="line number11 index10 alt2"> </div>
+<div class="line number12 index11 alt1"><code class="py comments"># we check if the file tBo store the credentials exists</code></div>
+<div class="line number13 index12 alt2"><code class="py keyword">if</code> <code class="py keyword">not</code> <code class="py plain">os.path.exists(</code><code class="py string">'./../../yen_gm_blogger_token.dat'</code><code class="py plain">):</code></div>
+<div class="line number14 index13 alt1"> </div>
+<div class="line number15 index14 alt2"><code class="py spaces">    </code><code class="py plain">flow </code><code class="py keyword">=</code> <code class="py plain">InstalledAppFlow.from_client_secrets_file(</code><code class="py string">'./../../yen_gm_blogger_secrets.json'</code><code class="py plain">, SCOPES)</code></div>
+<div class="line number16 index15 alt1"><code class="py spaces">    </code><code class="py plain">credentials </code><code class="py keyword">=</code> <code class="py plain">flow.run_local_server()</code></div>
+<div class="line number17 index16 alt2"> </div>
+<div class="line number18 index17 alt1"><code class="py spaces">    </code><code class="py plain">with </code><code class="py functions">open</code><code class="py plain">(</code><code class="py string">'./../../yen_gm_blogger_token.dat'</code><code class="py plain">, </code><code class="py string">'wb'</code><code class="py plain">) as credentials_dat:</code></div>
+<div class="line number19 index18 alt2"><code class="py spaces">        </code><code class="py plain">pickle.dump(credentials, credentials_dat)</code></div>
+<div class="line number20 index19 alt1"><code class="py keyword">else</code><code class="py plain">:</code></div>
+<div class="line number21 index20 alt2"><code class="py spaces">    </code><code class="py plain">with </code><code class="py functions">open</code><code class="py plain">(</code><code class="py string">'./../../yen_gm_blogger_token.dat'</code><code class="py plain">, </code><code class="py string">'rb'</code><code class="py plain">) as credentials_dat:</code></div>
+<div class="line number22 index21 alt1"><code class="py spaces">        </code><code class="py plain">credentials </code><code class="py keyword">=</code> <code class="py plain">pickle.load(credentials_dat)</code></div>
+<div class="line number23 index22 alt2"><code class="py plain">service </code><code class="py keyword">=</code> <code class="py plain">build(</code><code class="py string">'blogger'</code><code class="py plain">, </code><code class="py string">'v3'</code><code class="py plain">, credentials</code><code class="py keyword">=</code><code class="py plain">credentials)</code></div>
+<div class="line number24 index23 alt1"><code class="py plain">g.es(service)</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<h1>以 SSH 維護倉儲</h1>
+<p>由於在電腦教室時採用純 IPv6 協定上網, 因此為了能夠在近端將倉儲改版資料推送到目前只接受 IPv4 協定連線的 github, 以下除了將原本以 https 對 github 連線, 改為以 ssh 協定連線外, 在 Windows 環境下必須利用 putty 與 plink, 設定 putty 格式的 .ppk 以及能夠同時支援 IPv4 與 IPv6 的代理主機.</p>
+<p>設定步驟如下:</p>
+<p>1. 下載 Putty 工具組</p>
+<p><span>從 </span><a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/" rel="nofollow">https://www.chiark.greenend.org.uk/~sgtatham/putty/</a><span><span> </span>下載一般版, 或從<span> </span></span><a href="http://jakub.kotrla.net/putty/" rel="nofollow">http://jakub.kotrla.net/putty/</a><span><span> </span>下載特殊的可攜版本.</span></p>
+<p><span>2. 利用 y:\portablegit\bin\sh.exe 進入 shell 命令環境後, 以 </span></p>
+<div>
+<div class="syntaxhighlighter js" id="highlighter_637066">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="js plain">ssh-keygen -t rsa -b 4096 -C </code><code class="js string">"使用者學號"</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>在 /y/home/.ssh 目錄下建立 id_rsa 與 id_rsa.pub 等 private key 與 public key</p>
+<p>之後以 SciTE 開啟 id_rsa.pub 後, 將此 public key 的內容, 以新增添加到 Github.com 帳號下 personal settings -&gt; SSH and GPG keys 頁面下.</p>
+<p>3. 接下來要利用 puttygen.exe 將 id_rsa 轉為 Putty 可以解讀的 .ppk 格式, 並修改隨身系統的啟動批次檔案, 指定利用 putty 目錄下的 plink 執行 git 指令的網路代理設定.</p>
+<div>
+<div class="syntaxhighlighter js" id="highlighter_36704">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="js plain">修改啟動的 start.bat 加入下列設定:</code></div>
+<div class="line number2 index1 alt1"> </div>
+<div class="line number3 index2 alt2"><code class="js plain">set GIT_HOME=%Disk%:\portablegit\bin\</code></div>
+<div class="line number4 index3 alt1"><code class="js plain">set GIT_SSH=%Disk%:\putty\plink.exe</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>4. 利用 puttygen.exe 載入第二步驟所建立的 private key, 也就是 id_rsa.</p>
+<p>開啟 puttygen 之後, 以右下方的 load 載入 id_rsa, 成功載入後, 利用 save private key 按鈕, 將已經轉為 putty 格式的 .ppk 存檔. 此一 .ppk 檔案必須在設定 putty 中 github.com session 時, 在 Connection-&gt;SSH-&gt;Auth 項目下, 將轉檔後的 .ppk 指向 private key file for authentication 欄位. </p>
+<p>並在 Connection-&gt;Proxy 項目下, 指定 Proxy type: HTTP, 並將 IPv6 代理主機設為 ::53 或 ::42 埠號設為 3128.</p>
+<p>5. 之後確定 home 下的 .ssh 目錄中的 config 設定檔案為:</p>
+<div>
+<div class="syntaxhighlighter js" id="highlighter_491767">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+<div class="line number5 index4 alt2">5</div>
+<div class="line number6 index5 alt1">6</div>
+<div class="line number7 index6 alt2">7</div>
+<div class="line number8 index7 alt1">8</div>
+<div class="line number9 index8 alt2">9</div>
+<div class="line number10 index9 alt1">10</div>
+<div class="line number11 index10 alt2">11</div>
+<div class="line number12 index11 alt1">12</div>
+<div class="line number13 index12 alt2">13</div>
+<div class="line number14 index13 alt1">14</div>
+<div class="line number15 index14 alt2">15</div>
+<div class="line number16 index15 alt1">16</div>
+<div class="line number17 index16 alt2">17</div>
+<div class="line number18 index17 alt1">18</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="js preprocessor"># no proxy at home</code></div>
+<div class="line number2 index1 alt1"><code class="js preprocessor">#ProxyCommand y:/PortableGit/mingw64/bin/connect.exe -H proxy.mde.nfu.edu.tw:3128 %h %p</code></div>
+<div class="line number3 index2 alt2"><code class="js preprocessor"># set git_ssh=y:/putty/plink.exe with auth under putty github.com session setup</code></div>
+<div class="line number4 index3 alt1"><code class="js plain">ProxyCommand y:/putty/plink.exe github.com %h %p</code></div>
+<div class="line number5 index4 alt2"><code class="js spaces"> </code> </div>
+<div class="line number6 index5 alt1"><code class="js plain">Host github.com</code></div>
+<div class="line number7 index6 alt2"><code class="js spaces">    </code><code class="js plain">User git</code></div>
+<div class="line number8 index7 alt1"><code class="js spaces">    </code><code class="js plain">Port 22</code></div>
+<div class="line number9 index8 alt2"><code class="js spaces">    </code><code class="js plain">Hostname github.com</code></div>
+<div class="line number10 index9 alt1"><code class="js spaces">    </code> </div>
+<div class="line number11 index10 alt2"><code class="js spaces">    </code><code class="js preprocessor"># for connect.exe need openssh key format</code></div>
+<div class="line number12 index11 alt1"><code class="js spaces">    </code><code class="js preprocessor">#IdentityFile "y:\home\.ssh\id_rsa_mdecourse"</code></div>
+<div class="line number13 index12 alt2"><code class="js spaces">    </code><code class="js preprocessor"># for plink.exe need rsa key format but set under putty github.com session</code></div>
+<div class="line number14 index13 alt1"><code class="js spaces">    </code><code class="js preprocessor"># plink.exe do not need the following setting</code></div>
+<div class="line number15 index14 alt2"><code class="js spaces">    </code><code class="js preprocessor">#IdentityFile "y:\home\.ssh\mdecourse_putty_private.ppk"</code></div>
+<div class="line number16 index15 alt1"><code class="js spaces"> </code> </div>
+<div class="line number17 index16 alt2"><code class="js spaces">    </code><code class="js plain">TCPKeepAlive yes</code></div>
+<div class="line number18 index17 alt1"><code class="js spaces">    </code><code class="js plain">IdentitiesOnly yes</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>6. 最後再將 wcmj2020 倉儲中 .git 目錄下的 config 檔案中的連線協定, 由 https 改為採 ssh 連線: 範例如下:</p>
+<div>
+<div class="syntaxhighlighter js" id="highlighter_783770">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+<div class="line number5 index4 alt2">5</div>
+<div class="line number6 index5 alt1">6</div>
+<div class="line number7 index6 alt2">7</div>
+<div class="line number8 index7 alt1">8</div>
+<div class="line number9 index8 alt2">9</div>
+<div class="line number10 index9 alt1">10</div>
+<div class="line number11 index10 alt2">11</div>
+<div class="line number12 index11 alt1">12</div>
+<div class="line number13 index12 alt2">13</div>
+<div class="line number14 index13 alt1">14</div>
+<div class="line number15 index14 alt2">15</div>
+<div class="line number16 index15 alt1">16</div>
+<div class="line number17 index16 alt2">17</div>
+<div class="line number18 index17 alt1">18</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="js plain">[core]</code></div>
+<div class="line number2 index1 alt1"><code class="js spaces">    </code><code class="js plain">repositoryformatversion = 0</code></div>
+<div class="line number3 index2 alt2"><code class="js spaces">    </code><code class="js plain">filemode = </code><code class="js keyword">false</code></div>
+<div class="line number4 index3 alt1"><code class="js spaces">    </code><code class="js plain">bare = </code><code class="js keyword">false</code></div>
+<div class="line number5 index4 alt2"><code class="js spaces">    </code><code class="js plain">logallrefupdates = </code><code class="js keyword">true</code></div>
+<div class="line number6 index5 alt1"><code class="js spaces">    </code><code class="js plain">symlinks = </code><code class="js keyword">false</code></div>
+<div class="line number7 index6 alt2"><code class="js spaces">    </code><code class="js plain">ignorecase = </code><code class="js keyword">true</code></div>
+<div class="line number8 index7 alt1"><code class="js plain">[submodule]</code></div>
+<div class="line number9 index8 alt2"><code class="js spaces">    </code><code class="js plain">active = .</code></div>
+<div class="line number10 index9 alt1"><code class="js plain">[remote </code><code class="js string">"origin"</code><code class="js plain">]</code></div>
+<div class="line number11 index10 alt2"><code class="js spaces">    </code><code class="js preprocessor">#url = https://github.com/mdecourse/wcmj2020.git</code></div>
+<div class="line number12 index11 alt1"><code class="js spaces">    </code><code class="js plain">url = git@github.com:mdecourse/wcmj2020.git</code></div>
+<div class="line number13 index12 alt2"><code class="js spaces">    </code><code class="js plain">fetch = +refs/heads/*:refs/remotes/origin/*</code></div>
+<div class="line number14 index13 alt1"><code class="js plain">[branch </code><code class="js string">"master"</code><code class="js plain">]</code></div>
+<div class="line number15 index14 alt2"><code class="js spaces">    </code><code class="js plain">remote = origin</code></div>
+<div class="line number16 index15 alt1"><code class="js spaces">    </code><code class="js plain">merge = refs/heads/master</code></div>
+<div class="line number17 index16 alt2"><code class="js plain">[submodule </code><code class="js string">"cmsimde"</code><code class="js plain">]</code></div>
+<div class="line number18 index17 alt1"><code class="js spaces">    </code><code class="js plain">url = https:</code><code class="js comments">//github.com/mdecourse/cmsimde.git</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>之後就可以透過近端的 .ppk private key 與 Github.com 上的 public key 對應, 無需輸入帳號密碼就可以進行 git push.</p>
+<p><a href="https://drive.google.com/file/d/1VNBHNMXS1-wG7oaKDCpG5p3khsffB7oa/view?usp=sharing">W10 以 ssh 對倉儲連線設定說明影片</a> (登入 @gm 帳號後觀看)</p>
 <p><span></span></p>
